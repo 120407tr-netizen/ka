@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>彁より</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Yuji+Syuku&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#060304;          /* ほぼ黒 */
+    --ink2:#0d0506;
+    --blood:#4a0d0d;        /* 血(暗) */
+    --blood2:#7a1010;       /* 血(中) */
+    --blood-glow:#9e1b16;   /* 血(発色) */
+    --blood-bright:#b52c1e; /* 差し色の明るい血 */
+    --bone:#c8bab0;         /* くすんだ骨色 */
+    --bone-dim:#6f645f;
+    --paper:#b3a69d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#000;}
+  body{
+    font-family:"Shippori Mincho","Noto Serif CJK JP",serif;
+    color:var(--bone);-webkit-font-smoothing:antialiased;
+    display:flex;justify-content:center;
+  }
+  .page{
+    position:relative;width:900px;min-height:1273px;overflow:hidden;
+    background:
+      radial-gradient(80% 50% at 50% 42%, rgba(74,13,13,.18) 0%, rgba(74,13,13,0) 60%),
+      radial-gradient(130% 80% at 50% -10%, #180608 0%, #0a0304 55%, #030101 100%);
+    isolation:isolate;
+  }
+  /* 四隅を闇で締めるビネット */
+  .page::after{
+    content:"";position:absolute;inset:0;z-index:39;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 45%, rgba(0,0,0,.85) 100%);
+  }
+
+  /* 走査線 */
+  .page::before{
+    content:"";position:absolute;inset:0;z-index:40;pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.28) 2px 3px);
+    mix-blend-mode:multiply;opacity:.5;
+  }
+  /* ノイズ(SVGフィルタ) */
+  .noise{position:absolute;inset:0;z-index:41;pointer-events:none;opacity:.08;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation:noiseShift .4s steps(3) infinite;}
+  @keyframes noiseShift{0%{transform:translate(0,0)}33%{transform:translate(-4px,2px)}66%{transform:translate(3px,-3px)}100%{transform:translate(0,0)}}
+
+  /* 背景に散る幽霊漢字 */
+  .ghosts{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+  .ghost{position:absolute;font-family:"Yuji Syuku","Shippori Mincho",serif;
+    color:rgba(122,16,16,.15);user-select:none;line-height:1;
+    text-shadow:0 0 16px rgba(122,16,16,.18);}
+  .ghost.flick{animation:ghostFlicker 6s steps(1) infinite}
+  @keyframes ghostFlicker{
+    0%,100%{opacity:1}
+    46%{opacity:1}48%{opacity:.15}50%{opacity:1}
+    72%{opacity:1}73%{opacity:.05}74%{opacity:.9}
+  }
+
+  .inner{position:relative;z-index:10;padding:78px 74px 90px;}
+
+  /* ヘッダー */
+  .kicker{font-family:"Yuji Syuku",serif;letter-spacing:.5em;font-size:13px;
+    color:var(--blood2);text-align:center;margin-left:.5em;
+    text-shadow:0 0 10px rgba(192,57,43,.5)}
+  .title{
+    text-align:center;font-family:"Yuji Syuku","Shippori Mincho",serif;
+    font-weight:800;font-size:96px;letter-spacing:.08em;margin-top:10px;
+    color:#b7a59a;position:relative;
+    text-shadow:0 0 22px rgba(158,27,22,.55), 0 0 4px rgba(0,0,0,.9);
+    animation:titleShake 5s ease-in-out infinite;
+  }
+  @keyframes titleShake{0%,92%,100%{transform:translate(0,0)}94%{transform:translate(-2px,1px)}96%{transform:translate(2px,-1px)}98%{transform:translate(-1px,0)}}
+  /* タイトル直下に滲む血のかすれ */
+  .title-wrap{position:relative}
+  .title-wrap .bleed{position:absolute;left:50%;top:56%;transform:translateX(-50%);
+    width:420px;height:60px;pointer-events:none;z-index:-1;
+    background:radial-gradient(60% 100% at 50% 0%, rgba(122,16,16,.55), rgba(122,16,16,0) 70%);
+    filter:blur(6px)}
+  /* タイトルのRGBずれグリッチ */
+  .title .glitch{position:relative;display:inline-block}
+  .title .glitch::before,.title .glitch::after{
+    content:attr(data-t);position:absolute;left:0;top:0;width:100%;overflow:hidden;
+  }
+  .title .glitch::before{color:#b52c1e;transform:translate(-4px,0);opacity:.75;clip-path:inset(0 0 55% 0);animation:gl1 2.4s infinite steps(2)}
+  .title .glitch::after{color:#2e6f8f;transform:translate(4px,0);opacity:.5;clip-path:inset(55% 0 0 0);animation:gl2 3.1s infinite steps(2)}
+  @keyframes gl1{0%,100%{transform:translate(-4px,0)}50%{transform:translate(-8px,2px)}}
+  @keyframes gl2{0%,100%{transform:translate(4px,0)}50%{transform:translate(7px,-2px)}}
+  .title-en{text-align:center;font-family:"Yuji Syuku",serif;letter-spacing:.55em;
+    font-size:12px;color:var(--bone-dim);margin-top:14px;margin-left:.55em}
+
+  .rule{width:100%;height:1px;margin:34px 0 8px;
+    background:linear-gradient(90deg,transparent,var(--blood),transparent);opacity:.7}
+
+  /* リード文 */
+  .lead{font-size:17px;line-height:2.15;color:var(--paper);margin:30px 0;text-align:center}
+  .lead .b{color:var(--blood-glow);font-weight:700;
+    text-shadow:0 0 12px rgba(229,67,46,.5)}
+  .lead .ghosttext{font-family:"Yuji Syuku",serif;color:var(--blood2)}
+
+  /* 問い枠 */
+  .q{
+    position:relative;margin:20px 0;padding:22px 26px;
+    background:rgba(20,11,13,.7);border:1px solid rgba(143,29,29,.4);
+    box-shadow:0 0 30px rgba(143,29,29,.06) inset;
+  }
+  .q::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blood2);
+    box-shadow:0 0 10px var(--blood-glow)}
+  .q .qlabel{font-family:"Yuji Syuku",serif;font-size:14px;letter-spacing:.3em;
+    color:var(--blood2);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+  .q .qlabel .no{border:1px solid var(--blood);border-radius:2px;padding:1px 9px;color:var(--bone)}
+  .q .qbody{font-size:16px;line-height:1.95;color:var(--bone)}
+  .q .qbody .mask{background:var(--blood);color:var(--blood);border-radius:2px;padding:0 6px;
+    text-shadow:none;user-select:none}
+
+  /* 不穏な注記 */
+  .whisper{font-family:"Yuji Syuku",serif;font-size:13px;color:var(--bone-dim);
+    text-align:center;margin:24px 0;letter-spacing:.15em;line-height:2;font-style:normal}
+  .whisper .flick{animation:ghostFlicker 5s steps(1) infinite;color:var(--blood2)}
+
+  /* 回答欄 */
+  .answer{margin-top:40px}
+  .answer .lb{font-family:"Yuji Syuku",serif;letter-spacing:.4em;font-size:15px;color:var(--blood2)}
+  .answer .ln{margin-top:12px;height:2px;
+    background:repeating-linear-gradient(90deg,rgba(143,29,29,.7) 0 8px,transparent 8px 16px)}
+
+  /* 突発的な赤いフラッシュ(血) */
+  .redflash{position:absolute;inset:0;z-index:38;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 50%, rgba(158,27,22,.35), rgba(158,27,22,0) 65%);
+    opacity:0;animation:redflash 11s steps(1) infinite}
+  @keyframes redflash{0%,96%,100%{opacity:0}97%{opacity:.9}97.6%{opacity:0}98.2%{opacity:.7}98.6%{opacity:0}}
+
+  .footer{position:absolute;left:0;right:0;bottom:34px;text-align:center;z-index:10;
+    font-family:"Yuji Syuku",serif;letter-spacing:.5em;font-size:11px;color:rgba(138,127,122,.4)}
+
+  /* 署名「彁より」 */
+  .sign{text-align:right;margin-top:40px;font-family:"Yuji Syuku",serif;
+    font-size:22px;color:var(--blood-glow);letter-spacing:.2em;
+    text-shadow:0 0 14px rgba(229,67,46,.5)}
+  .sign .flick{animation:ghostFlicker 4s steps(1) infinite}
+
+  @media (prefers-reduced-motion:reduce){
+    .noise,.ghost.flick,.title .glitch::before,.title .glitch::after,.whisper .flick,.sign .flick{animation:none!important}
+  }
+  .q .qlabel .ans{color:var(--bone);font-family:"Shippori Mincho",serif;font-weight:700;letter-spacing:.05em;font-size:15px;margin-left:6px}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="ghosts" id="ghosts"></div>
+  <div class="redflash"></div>
+  <div class="noise"></div>
+
+  <div class="inner">
+    <div class="kicker">Ｋ Ａ Ｉ ・ 種 明 か し</div>
+    <div class="title-wrap">
+      <div class="bleed"></div>
+      <h1 class="title"><span class="glitch" data-t="解 　 彁">解 　 彁</span></h1>
+    </div>
+    <div class="title-en">読 め ぬ 名 の 、 答 え</div>
+    <div class="rule"></div>
+
+    <p class="lead">
+      九つの問いは、一本の糸で繋がっていた。<br>
+      <span class="b">9 → QOL → 獅子 → 星座 → 花札 → 月 → 秋の七草 → うさぎ → えと</span><br>
+      そして最後に、<span class="ghosttext">彁</span> の名が明かされる。
+    </p>
+
+    <div class="q">
+      <div class="qlabel"><span class="no">壱</span>　解 1　<span class="ans">9を得る</span></div>
+      <div class="qbody">私＝9を3つに分けると、それぞれ3になる。仏教徒が帰依する「三宝」（仏・法・僧）の3と同じ数。<br>
+18→1+8=9／99→18→1+8=9。どんな数と掛けても桁を足せば9に戻る。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">弐</span>　解 2　<span class="ans">アルファベット（the alphabet）／44／獅子</span></div>
+      <div class="qbody">要素は26個（10より大きく100より小さい合成数）。A〜Zが一列に並び位置が定まる。“alphabet”はアルファベットの文字だけで綴れ、使う文字は8文字で26より遥かに少ない。最初の2文字 alpha+beta が語源。<br>
+「9を得る」→「きゅーをえる」→「QOL」。<br>
+Q=17番目、O=15番目、L=12番目。17+15+12＝44。語呂合わせで「獅子」。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">参</span>　解 3　<span class="ans">星座 → 獅子座</span></div>
+      <div class="qbody">夜空に生まれ、名を持ちながら声はなく、神々（神話の登場人物）と獣（動物の星座）が線でつながれた存在。船乗りは星座を頼りに航海し、古代の人々は星座に物語を刻んだ。点と点（星と星）を結べば姿が浮かぶ。<br>
+＝「星座」。さきの動物・獅子を当てはめて「獅子座」。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">肆</span>　解 4　<span class="ans">花札</span></div>
+      <div class="qbody">五つが最も強く煌めく＝光札（五枚）。その一つに雨＝「柳に小野道風」の雨（雨の光札）。<br>
+青が三つ・赤が三つ＝青短（三枚）と赤短（三枚）。<br>
+生き物四匹で二匹が同じ姿・同じ場所＝動物札。猪鹿蝶のうち蝶は札に2匹いるため。<br>
+「のみの役」も強い。よって＝「花札」。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">伍</span>　解 5　<span class="ans">月 → 萩と芒</span></div>
+      <div class="qbody">獅子座の期間は7月23日〜8月22日。花札に対応させると──<br>
+【7月】文月〜萩（はぎ）／【8月】葉月〜芒（すすき）。<br>
+「私」＝月。ほとんど動かない2つの生物として、萩・芒が導かれる。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">陸</span>　解 6　<span class="ans">秋の七草 / 秋</span></div>
+      <div class="qbody">7人の姉妹＝萩・芒（尾花）・葛・撫子・女郎花・藤袴・桔梗の秋の七草。萩と芒もこの姉妹。<br>
+共通するもの＝秋の七草、季節＝秋。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">漆</span>　解 7　<span class="ans">うさぎ</span></div>
+      <div class="qbody">秋の月見。その象徴はうさぎ。月には蟹がいるともされるが、陸の動物としては「うさぎ」。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">捌</span>　解 8　<span class="ans">えと</span></div>
+      <div class="qbody">「絵と」＝手を走らせた作者のまなざしが形になったもの（絵）。「えーと」＝言いよどむ人。<br>
+その心は『えと』と言うでしょう。2文字。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">玖</span>　解 9　<span class="ans">テンポラリーケア</span></div>
+      <div class="qbody">うさぎの『えと』。卯の『干支』は4。<br>
+4は返照館。元ネタは四字熟語「回光返照」。<br>
+回光返照＝死の間際に一時的に元気を取り戻す／物事が滅びる間際に一時的に勢いを回復する意。<br>
+対応するのは「中治り現象」。Google翻訳すると Temporary recovery (followed by a relapse)。<br>
+「Temporary recovery」の文字（重複除く）＝T, e, m, p, o, r, a, y, c, v（10種類）。<br>
+これらで作れる福祉用語＝「テンポラリーケア（temporary care）」。</div>
+    </div>
+
+    <div class="whisper">
+      最終解答──<br>
+      <span class="flick" style="font-size:22px">テ ン ポ ラ リ ー ケ ア</span>
+    </div>
+
+    <div class="sign"><span class="flick">彁</span> より</div>
+  </div>
+
+  <div class="footer">Ｙ Ａ Ｔ Ａ Ｉ 　 Ｎ Ａ Ｚ Ｏ Ｔ Ｏ Ｋ Ｉ 　 ・ 　 種 明 か し</div>
+</div>
+
+<script>
+  // 背景に幽霊漢字を散らす(実在の幽霊文字を中心に)
+  const ghostChars=['彁','妛','暃','碡','墸','蟐','鵈','袮','閠','鑈','駲','鵥','嫹','鸙','爑','橸','鵼','軅','靹'];
+  const layer=document.getElementById('ghosts');
+  const N=60;
+  for(let i=0;i<N;i++){
+    const g=document.createElement('div');
+    g.className='ghost'+(Math.random()<0.5?' flick':'');
+    g.textContent=ghostChars[Math.floor(Math.random()*ghostChars.length)];
+    g.style.left=Math.random()*100+'%';
+    g.style.top=Math.random()*100+'%';
+    g.style.fontSize=(18+Math.random()*90)+'px';
+    g.style.transform=`rotate(${(Math.random()*36-18)}deg)`;
+    g.style.animationDelay=(Math.random()*6)+'s';
+    if(Math.random()<0.2) g.style.color='rgba(180,168,158,.05)';
+    layer.appendChild(g);
+  }
+</script>
+</body>
+</html>

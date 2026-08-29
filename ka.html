@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>彁より</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Yuji+Syuku&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#060304;          /* ほぼ黒 */
+    --ink2:#0d0506;
+    --blood:#4a0d0d;        /* 血(暗) */
+    --blood2:#7a1010;       /* 血(中) */
+    --blood-glow:#9e1b16;   /* 血(発色) */
+    --blood-bright:#b52c1e; /* 差し色の明るい血 */
+    --bone:#c8bab0;         /* くすんだ骨色 */
+    --bone-dim:#6f645f;
+    --paper:#b3a69d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#000;}
+  body{
+    font-family:"Shippori Mincho","Noto Serif CJK JP",serif;
+    color:var(--bone);-webkit-font-smoothing:antialiased;
+    display:flex;justify-content:center;
+  }
+  .page{
+    position:relative;width:900px;min-height:1273px;overflow:hidden;
+    background:
+      radial-gradient(80% 50% at 50% 42%, rgba(74,13,13,.18) 0%, rgba(74,13,13,0) 60%),
+      radial-gradient(130% 80% at 50% -10%, #180608 0%, #0a0304 55%, #030101 100%);
+    isolation:isolate;
+  }
+  /* 四隅を闇で締めるビネット */
+  .page::after{
+    content:"";position:absolute;inset:0;z-index:39;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 45%, rgba(0,0,0,0) 45%, rgba(0,0,0,.85) 100%);
+  }
+
+  /* 走査線 */
+  .page::before{
+    content:"";position:absolute;inset:0;z-index:40;pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.28) 2px 3px);
+    mix-blend-mode:multiply;opacity:.5;
+  }
+  /* ノイズ(SVGフィルタ) */
+  .noise{position:absolute;inset:0;z-index:41;pointer-events:none;opacity:.08;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation:noiseShift .4s steps(3) infinite;}
+  @keyframes noiseShift{0%{transform:translate(0,0)}33%{transform:translate(-4px,2px)}66%{transform:translate(3px,-3px)}100%{transform:translate(0,0)}}
+
+  /* 背景に散る幽霊漢字 */
+  .ghosts{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+  .ghost{position:absolute;font-family:"Yuji Syuku","Shippori Mincho",serif;
+    color:rgba(122,16,16,.15);user-select:none;line-height:1;
+    text-shadow:0 0 16px rgba(122,16,16,.18);}
+  .ghost.flick{animation:ghostFlicker 6s steps(1) infinite}
+  @keyframes ghostFlicker{
+    0%,100%{opacity:1}
+    46%{opacity:1}48%{opacity:.15}50%{opacity:1}
+    72%{opacity:1}73%{opacity:.05}74%{opacity:.9}
+  }
+
+  .inner{position:relative;z-index:10;padding:78px 74px 90px;}
+
+  /* ヘッダー */
+  .kicker{font-family:"Yuji Syuku",serif;letter-spacing:.5em;font-size:13px;
+    color:var(--blood2);text-align:center;margin-left:.5em;
+    text-shadow:0 0 10px rgba(192,57,43,.5)}
+  .title{
+    text-align:center;font-family:"Yuji Syuku","Shippori Mincho",serif;
+    font-weight:800;font-size:96px;letter-spacing:.08em;margin-top:10px;
+    color:#b7a59a;position:relative;
+    text-shadow:0 0 22px rgba(158,27,22,.55), 0 0 4px rgba(0,0,0,.9);
+    animation:titleShake 5s ease-in-out infinite;
+  }
+  @keyframes titleShake{0%,92%,100%{transform:translate(0,0)}94%{transform:translate(-2px,1px)}96%{transform:translate(2px,-1px)}98%{transform:translate(-1px,0)}}
+  /* タイトル直下に滲む血のかすれ */
+  .title-wrap{position:relative}
+  .title-wrap .bleed{position:absolute;left:50%;top:56%;transform:translateX(-50%);
+    width:420px;height:60px;pointer-events:none;z-index:-1;
+    background:radial-gradient(60% 100% at 50% 0%, rgba(122,16,16,.55), rgba(122,16,16,0) 70%);
+    filter:blur(6px)}
+  /* タイトルのRGBずれグリッチ */
+  .title .glitch{position:relative;display:inline-block}
+  .title .glitch::before,.title .glitch::after{
+    content:attr(data-t);position:absolute;left:0;top:0;width:100%;overflow:hidden;
+  }
+  .title .glitch::before{color:#b52c1e;transform:translate(-4px,0);opacity:.75;clip-path:inset(0 0 55% 0);animation:gl1 2.4s infinite steps(2)}
+  .title .glitch::after{color:#2e6f8f;transform:translate(4px,0);opacity:.5;clip-path:inset(55% 0 0 0);animation:gl2 3.1s infinite steps(2)}
+  @keyframes gl1{0%,100%{transform:translate(-4px,0)}50%{transform:translate(-8px,2px)}}
+  @keyframes gl2{0%,100%{transform:translate(4px,0)}50%{transform:translate(7px,-2px)}}
+  .title-en{text-align:center;font-family:"Yuji Syuku",serif;letter-spacing:.55em;
+    font-size:12px;color:var(--bone-dim);margin-top:14px;margin-left:.55em}
+
+  .rule{width:100%;height:1px;margin:34px 0 8px;
+    background:linear-gradient(90deg,transparent,var(--blood),transparent);opacity:.7}
+
+  /* リード文 */
+  .lead{font-size:17px;line-height:2.15;color:var(--paper);margin:30px 0;text-align:center}
+  .lead .b{color:var(--blood-glow);font-weight:700;
+    text-shadow:0 0 12px rgba(229,67,46,.5)}
+  .lead .ghosttext{font-family:"Yuji Syuku",serif;color:var(--blood2)}
+
+  /* 問い枠 */
+  .q{
+    position:relative;margin:20px 0;padding:22px 26px;
+    background:rgba(20,11,13,.7);border:1px solid rgba(143,29,29,.4);
+    box-shadow:0 0 30px rgba(143,29,29,.06) inset;
+  }
+  .q::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blood2);
+    box-shadow:0 0 10px var(--blood-glow)}
+  .q .qlabel{font-family:"Yuji Syuku",serif;font-size:14px;letter-spacing:.3em;
+    color:var(--blood2);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+  .q .qlabel .no{border:1px solid var(--blood);border-radius:2px;padding:1px 9px;color:var(--bone)}
+  .q .qbody{font-size:16px;line-height:1.95;color:var(--bone)}
+  .q .qbody .mask{background:var(--blood);color:var(--blood);border-radius:2px;padding:0 6px;
+    text-shadow:none;user-select:none}
+
+  /* 不穏な注記 */
+  .whisper{font-family:"Yuji Syuku",serif;font-size:13px;color:var(--bone-dim);
+    text-align:center;margin:24px 0;letter-spacing:.15em;line-height:2;font-style:normal}
+  .whisper .flick{animation:ghostFlicker 5s steps(1) infinite;color:var(--blood2)}
+
+  /* 回答欄 */
+  .answer{margin-top:40px}
+  .answer .lb{font-family:"Yuji Syuku",serif;letter-spacing:.4em;font-size:15px;color:var(--blood2)}
+  .answer .ln{margin-top:12px;height:2px;
+    background:repeating-linear-gradient(90deg,rgba(143,29,29,.7) 0 8px,transparent 8px 16px)}
+
+  /* 突発的な赤いフラッシュ(血) */
+  .redflash{position:absolute;inset:0;z-index:38;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 50%, rgba(158,27,22,.35), rgba(158,27,22,0) 65%);
+    opacity:0;animation:redflash 11s steps(1) infinite}
+  @keyframes redflash{0%,96%,100%{opacity:0}97%{opacity:.9}97.6%{opacity:0}98.2%{opacity:.7}98.6%{opacity:0}}
+
+  .footer{position:absolute;left:0;right:0;bottom:34px;text-align:center;z-index:10;
+    font-family:"Yuji Syuku",serif;letter-spacing:.5em;font-size:11px;color:rgba(138,127,122,.4)}
+
+  /* 署名「彁より」 */
+  .sign{text-align:right;margin-top:40px;font-family:"Yuji Syuku",serif;
+    font-size:22px;color:var(--blood-glow);letter-spacing:.2em;
+    text-shadow:0 0 14px rgba(229,67,46,.5)}
+  .sign .flick{animation:ghostFlicker 4s steps(1) infinite}
+
+  @media (prefers-reduced-motion:reduce){
+    .noise,.ghost.flick,.title .glitch::before,.title .glitch::after,.whisper .flick,.sign .flick{animation:none!important}
+  }
+  .blank{display:inline-block;width:1em;height:1em;background:var(--blood2);
+    border:1px solid var(--blood-glow);border-radius:2px;vertical-align:-0.15em;margin:0 2px;
+    box-shadow:0 0 6px rgba(158,27,22,.5)}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="ghosts" id="ghosts"></div>
+  <div class="redflash"></div>
+  <div class="noise"></div>
+
+  <div class="inner">
+    <div class="kicker">Ｋ Ａ Ｉ ・ 開 か ず の 帳</div>
+    <div class="title-wrap">
+      <div class="bleed"></div>
+      <h1 class="title"><span class="glitch" data-t="彁 よ り">彁 よ り</span></h1>
+    </div>
+    <div class="title-en">読 め ぬ 名 の 、 招 待</div>
+    <div class="rule"></div>
+
+    <p class="lead">
+      ……ここは、入ってはいけない場所だ。<br>
+      屋台の灯りの、その<span class="b">裏側</span>。<br>
+      <span class="ghosttext">彁</span> からの、九つの問い。<br>
+      すべては<span class="b">繋がって</span>いる。前の答えが、次の鍵。
+    </p>
+
+    <div class="q">
+      <div class="qlabel"><span class="no">壱</span>　問 1</div>
+      <div class="qbody">私を3つに分けると、それぞれが仏教徒が帰依する<span class="blank"></span>つの拠りどころと同じ数になる。私は、どんな数字と掛け合わせても、桁を足せば形が戻る。これを成立させるために、私を得て見よ。<br>
+解答方法「△を得る」（<span class="blank"></span>と△は数字）</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">弐</span>　問 2</div>
+      <div class="qbody">あるものは、有限個の要素からなる順序付きの集合である。以下の性質を持つ:<br>
+<br>
+1. この集合の要素の総数は、10より大きく100より小さい合成数である。<br>
+2. 要素は一列に並んでおり、それぞれに「1番目」「2番目」といった一意な位置が定まっている。<br>
+3. この集合の名前そのものは、この集合の要素だけを使って綴ることができる。<br>
+4. しかしその名前を綴るのに使う要素の数は、集合の要素の総数よりはるかに少ない。<br>
+5. この集合の最初の2つの要素をつなげたものが、そのままこの集合を指す一般的な呼び名の由来になっている。<br>
+<br>
+先ほどの問題の答え「」を、<span class="blank"></span>つのこれにせよ。語呂合わせで良い。<br>
+そして、それぞれこれの順で数えて、その<span class="blank"></span>つの数をそのまま<span class="blank"></span>つとも足せ。<br>
+できた数字の語呂に合う動物は何になるか。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">参</span>　問 3</div>
+      <div class="qbody">夜に生まれ、名を持つけれど声はなく、<br>
+神々と獣が線でつながれた者。<br>
+昔の旅人は我を頼りに海を渡り、<br>
+古の民は我に物語を刻んだ。<br>
+点と点を結べば、そこに姿が浮かぶ。<br>
+<br>
+さて、我は何？わかったのなら、さっきの動物を我に当てはめよ。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">肆</span>　問 4</div>
+      <div class="qbody">五つは、もっとも強く煌めく。されど、その一つには雨がしとしとと降りかかる。<br>
+<br>
+青が<span class="blank"></span>つ、赤が<span class="blank"></span>つ、それぞれに意味を宿す。<br>
+<br>
+かの生き物、四匹あってもよかろう。なれど、そのうち二匹は同じ姿、同じ場所に寄り添いおる。<br>
+此れ、のみもまた強し。<br>
+<br>
+妾はなんぞ？</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">伍</span>　問 5</div>
+      <div class="qbody">私は現れるごとに生まれ変わる。<br>
+姿を全て現せば、少しずつ姿を隠し、全ての姿を隠せば、また少しずつ姿を現す。<br>
+ひまわりがみる、あの星の光を借りて輝くが、自分では光らない。<br>
+しかし、それでも私は存在感があるようで、その引力は海を動かし、人の心も揺らすという。<br>
+さて、私は誰？<br>
+<br>
+更に、<br>
+２つ前の答えの私は何？それを、1つ前の答えの私に対応させたら、２つの自らほとんど動かない生物が現るはず。<br>
+その２つの生き物は？</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">陸</span>　問 6</div>
+      <div class="qbody">野原に7人の姉妹が並んでいます。<br>
+そのうち、さっきの２つもこの姉妹です。<br>
+さて、この7人の姉妹に共通するもの、そして季節はなんでしょう？</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">漆</span>　問 7</div>
+      <div class="qbody">さっきの季節。その季節に、２つ前の問いの「私」をよく見ますね。そこにいるといわれる動物は？（海の動物とするところもあるようですが、陸の動物でお願いします。）</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">捌</span>　問 8</div>
+      <div class="qbody">「手を走らせた作者のまなざしが、そのまま形になったもの。」とかけまして、「言いよどむ人」ととく。その心は、『』言うでしょう。<br>
+『』は2文字（<span class="blank"></span>文字）ダヨ。</div>
+    </div>
+    <div class="q">
+      <div class="qlabel"><span class="no">玖</span>　問 9</div>
+      <div class="qbody">２つ前の答えと、１つ前の答えを使うよ。<br>
+その動物の『』の数字。<br>
+そして、花園大学のホームページから見れるキャンパスマップで見つけられる、その数字が対応する場所はどこ？<br>
+加えて、その場所の名前の元ネタの四字熟語は？<br>
+更にその四字熟語と同じ意味合いを持つ「〇〇〇現象」は？<br>
+〇〇〇をGoogle翻訳にかけると、「英文（英文）」という形で翻訳されるはず。<br>
+このうち、（）を除き、そのアルファベットだけで作れる福祉用語はなに？</div>
+    </div>
+
+    <div class="whisper">
+      ― <span class="flick">みてはいけない</span> ―<br>
+      九つ、すべて解いた者から、名を呼ばれる。
+    </div>
+
+    <div class="answer">
+      <div class="lb">最 終 解 答</div>
+      <div class="ln"></div>
+    </div>
+
+    <div class="sign"><span class="flick">彁</span> より</div>
+  </div>
+
+  <div class="footer">Ｙ Ａ Ｔ Ａ Ｉ 　 Ｎ Ａ Ｚ Ｏ Ｔ Ｏ Ｋ Ｉ 　 ・ 　 禁 忌</div>
+</div>
+
+<script>
+  // 背景に幽霊漢字を散らす(実在の幽霊文字を中心に)
+  const ghostChars=['彁','妛','暃','碡','墸','蟐','鵈','袮','閠','鑈','駲','鵥','嫹','鸙','爑','橸','鵼','軅','靹'];
+  const layer=document.getElementById('ghosts');
+  const N=60;
+  for(let i=0;i<N;i++){
+    const g=document.createElement('div');
+    g.className='ghost'+(Math.random()<0.5?' flick':'');
+    g.textContent=ghostChars[Math.floor(Math.random()*ghostChars.length)];
+    g.style.left=Math.random()*100+'%';
+    g.style.top=Math.random()*100+'%';
+    g.style.fontSize=(18+Math.random()*90)+'px';
+    g.style.transform=`rotate(${(Math.random()*36-18)}deg)`;
+    g.style.animationDelay=(Math.random()*6)+'s';
+    if(Math.random()<0.2) g.style.color='rgba(180,168,158,.05)';
+    layer.appendChild(g);
+  }
+</script>
+</body>
+</html>
